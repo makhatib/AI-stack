@@ -2,7 +2,7 @@
 
 ################################################################################
 # Advanced Automation Stack - Automated Installation Script
-# Core: n8n, PostgreSQL, Redis, Qdrant, Supabase, MinIO
+# Core: n8n, PostgreSQL, Redis, Qdrant, MinIO
 # Optional: Ollama, Grafana+Prometheus, Uptime Kuma, Portainer, Open WebUI
 ################################################################################
 
@@ -92,7 +92,6 @@ cat << "EOF"
 ║   ✓ PostgreSQL - Database                               ║
 ║   ✓ Redis - Cache/Queue                                 ║
 ║   ✓ Qdrant - Vector Database for AI                     ║
-║   ✓ Supabase - Complete Backend API                     ║
 ║   ✓ MinIO - S3 Object Storage                           ║
 ║   ✓ Traefik - Reverse Proxy with SSL                    ║
 ║                                                           ║
@@ -102,10 +101,10 @@ cat << "EOF"
 ║   ⭐ Grafana + Prometheus - Monitoring                   ║
 ║   ⭐ Uptime Kuma - Service Monitoring                    ║
 ║   ⭐ Portainer - Container Management                    ║
-║                                                           ║
-║   طريقك للذكاء الاصطناعي المحلي                         ║
-║   Your Path to Self-Hosted AI Infrastructure             ║
-║                                                           ║
+║                                                           
+║   طريقك للذكاء الاصطناعي المحلي                         
+║   Your Path to Self-Hosted AI Infrastructure             
+║                                                           
 ╚═══════════════════════════════════════════════════════════╝
 EOF
 
@@ -272,7 +271,6 @@ echo -e "${GREEN}  ✓ n8n (Workflow Automation)${NC}"
 echo -e "${GREEN}  ✓ PostgreSQL (Database)${NC}"
 echo -e "${GREEN}  ✓ Redis (Cache/Queue)${NC}"
 echo -e "${GREEN}  ✓ Qdrant (Vector Search)${NC}"
-echo -e "${GREEN}  ✓ Supabase (Backend API)${NC}"
 echo -e "${GREEN}  ✓ MinIO (Object Storage)${NC}"
 echo -e "${GREEN}  ✓ Traefik (Reverse Proxy with SSL)${NC}"
 echo ""
@@ -354,14 +352,6 @@ print_success "REDIS_PASSWORD generated (64 characters)"
 QDRANT_API_KEY=$(generate_secret 32)
 print_success "QDRANT_API_KEY generated (64 characters)"
 
-# Supabase Keys
-SUPABASE_JWT_SECRET=$(generate_secret 32)
-SUPABASE_ANON_KEY=$(generate_secret 32)
-SUPABASE_SERVICE_KEY=$(generate_secret 32)
-SUPABASE_SECRET_KEY_BASE=$(generate_secret 32)
-SUPABASE_DASHBOARD_PASSWORD=$(generate_secret 16)
-print_success "SUPABASE keys generated"
-
 # MinIO
 MINIO_ROOT_USER="admin"
 MINIO_ROOT_PASSWORD=$(generate_secret 16)
@@ -389,7 +379,6 @@ echo ""
 echo -e "${BOLD}Core Services:${NC}"
 echo "  $N8N_SUBDOMAIN.$DOMAIN_NAME           →  $SERVER_IP"
 echo "  qdrant.$DOMAIN_NAME         →  $SERVER_IP"
-echo "  supabase.$DOMAIN_NAME       →  $SERVER_IP"
 echo "  minio.$DOMAIN_NAME          →  $SERVER_IP"
 echo "  s3.$DOMAIN_NAME             →  $SERVER_IP"
 
@@ -482,7 +471,8 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_MULTIPLE_DATABASES=n8n,supabase
+      # Only one database needed now
+      - POSTGRES_MULTIPLE_DATABASES=n8n 
     volumes:
       - ./init-scripts:/docker-entrypoint-initdb.d
       - postgres_data:/var/lib/postgresql/data
@@ -561,216 +551,6 @@ services:
       - "traefik.http.routers.qdrant.entrypoints=websecure"
       - "traefik.http.routers.qdrant.tls.certresolver=letsencrypt"
       - "traefik.http.services.qdrant.loadbalancer.server.port=6333"
-
-  # Supabase Studio
-  supabase-studio:
-    image: supabase/studio:2025.11.26-sha-8f096b5
-    restart: always
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "node",
-          "-e",
-          "fetch('http://studio:3000/api/platform/profile').then((r) => {if (r.status !== 200) throw new Error(r.status)})"
-        ]
-      timeout: 10s
-      interval: 5s
-      retries: 3
-    environment:
-      HOSTNAME: "::"
-      STUDIO_PG_META_URL: http://supabase-meta:8080
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      SUPABASE_URL: http://supabase-kong:8000
-      SUPABASE_PUBLIC_URL: https://supabase.${DOMAIN_NAME}
-      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
-      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
-      AUTH_JWT_SECRET: ${SUPABASE_JWT_SECRET}
-      NEXT_PUBLIC_ENABLE_LOGS: "true"
-      NEXT_ANALYTICS_BACKEND_PROVIDER: postgres
-    networks:
-      - automation-network
-    depends_on:
-      - supabase-meta
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.supabase.rule=Host('supabase.${DOMAIN_NAME}')"
-      - "traefik.http.routers.supabase.tls=true"
-      - "traefik.http.routers.supabase.entrypoints=websecure"
-      - "traefik.http.routers.supabase.tls.certresolver=letsencrypt"
-      - "traefik.http.services.supabase.loadbalancer.server.port=3000"
-
-  # Supabase Kong (API Gateway)
-  supabase-kong:
-    image: kong:2.8.1
-    restart: always
-    environment:
-      KONG_DATABASE: "off"
-      KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
-      KONG_DNS_ORDER: LAST,A,CNAME
-      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth
-      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
-      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
-      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
-      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
-    volumes:
-      - ./supabase/kong.yml:/var/lib/kong/kong.yml
-    networks:
-      - automation-network
-    depends_on:
-      - supabase-auth
-      - supabase-rest
-      - supabase-realtime
-      - supabase-storage
-
-  # Supabase Auth
-  supabase-auth:
-    image: supabase/gotrue:v2.183.0
-    restart: always
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:9999/health"
-        ]
-      timeout: 5s
-      interval: 5s
-      retries: 3
-    environment:
-      GOTRUE_API_HOST: 0.0.0.0
-      GOTRUE_API_PORT: "9999"
-      API_EXTERNAL_URL: https://supabase.${DOMAIN_NAME}
-      GOTRUE_DB_DRIVER: postgres
-      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@postgres:5432/supabase
-      GOTRUE_SITE_URL: https://supabase.${DOMAIN_NAME}
-      GOTRUE_JWT_SECRET: ${SUPABASE_JWT_SECRET}
-      GOTRUE_JWT_EXP: "3600"
-      GOTRUE_DISABLE_SIGNUP: "false"
-      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
-      GOTRUE_MAILER_AUTOCONFIRM: "false"
-    networks:
-      - automation-network
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  # Supabase REST (PostgREST)
-  supabase-rest:
-    image: postgrest/postgrest:v13.0.7
-    restart: always
-    environment:
-      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@postgres:5432/supabase
-      PGRST_DB_SCHEMAS: public,storage,graphql_public
-      PGRST_DB_ANON_ROLE: anon
-      PGRST_JWT_SECRET: ${SUPABASE_JWT_SECRET}
-      PGRST_DB_USE_LEGACY_GUCS: "false"
-      PGRST_APP_SETTINGS_JWT_SECRET: ${SUPABASE_JWT_SECRET}
-      PGRST_APP_SETTINGS_JWT_EXP: "3600"
-    networks:
-      - automation-network
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  # Supabase Realtime
-  supabase-realtime:
-    image: supabase/realtime:v2.65.3
-    restart: always
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "curl",
-          "-sSfL",
-          "--head",
-          "-o",
-          "/dev/null",
-          "-H",
-          "Authorization: Bearer ${SUPABASE_ANON_KEY}",
-          "http://localhost:4000/api/tenants/realtime-dev/health"
-        ]
-      timeout: 5s
-      interval: 5s
-      retries: 3
-    environment:
-      PORT: "4000"
-      DB_HOST: postgres
-      DB_PORT: "5432"
-      DB_USER: supabase_admin
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
-      DB_NAME: supabase
-      DB_AFTER_CONNECT_QUERY: "SET search_path TO _realtime"
-      DB_ENC_KEY: supabaserealtime
-      API_JWT_SECRET: ${SUPABASE_JWT_SECRET}
-      SECRET_KEY_BASE: ${SUPABASE_SECRET_KEY_BASE}
-      ERL_AFLAGS: "-proto_dist inet_tcp"
-      DNS_NODES: "''"
-      APP_NAME: realtime
-      SEED_SELF_HOST: "true"
-      RUN_JANITOR: "true"
-    networks:
-      - automation-network
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  # Supabase Storage
-  supabase-storage:
-    image: supabase/storage-api:v1.32.0
-    restart: always
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://storage:5000/status"
-        ]
-      timeout: 5s
-      interval: 5s
-      retries: 3
-    environment:
-      ANON_KEY: ${SUPABASE_ANON_KEY}
-      SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
-      POSTGREST_URL: http://supabase-rest:3000
-      PGRST_JWT_SECRET: ${SUPABASE_JWT_SECRET}
-      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@postgres:5432/supabase
-      FILE_SIZE_LIMIT: "52428800"
-      STORAGE_BACKEND: file
-      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
-      TENANT_ID: stub
-      REGION: stub
-      GLOBAL_S3_BUCKET: stub
-    volumes:
-      - supabase_storage:/var/lib/storage
-    networks:
-      - automation-network
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  # Supabase Meta
-  supabase-meta:
-    image: supabase/postgres-meta:v0.93.1
-    restart: always
-    environment:
-      PG_META_PORT: "8080"
-      PG_META_DB_HOST: postgres
-      PG_META_DB_PORT: "5432"
-      PG_META_DB_NAME: supabase
-      PG_META_DB_USER: supabase_admin
-      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
-    networks:
-      - automation-network
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   # MinIO - Object Storage
   minio:
@@ -953,7 +733,6 @@ volumes:
   redis_data:
   n8n_data:
   qdrant_data:
-  supabase_storage:
   minio_data:
 EOFVOLUMES
 
@@ -1020,15 +799,6 @@ REDIS_PASSWORD=$REDIS_PASSWORD
 QDRANT_API_KEY=$QDRANT_API_KEY
 
 # ==============================================
-# SUPABASE CONFIGURATION
-# ==============================================
-SUPABASE_JWT_SECRET=$SUPABASE_JWT_SECRET
-SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
-SUPABASE_SERVICE_KEY=$SUPABASE_SERVICE_KEY
-SUPABASE_SECRET_KEY_BASE=$SUPABASE_SECRET_KEY_BASE
-SUPABASE_DASHBOARD_PASSWORD=$SUPABASE_DASHBOARD_PASSWORD
-
-# ==============================================
 # MINIO CONFIGURATION
 # ==============================================
 MINIO_ROOT_USER=$MINIO_ROOT_USER
@@ -1059,130 +829,27 @@ cat > init-scripts/init-db.sh << 'EOFINIT'
 set -e
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
-    -- Create databases
+    -- Create n8n database
     CREATE DATABASE n8n;
-    CREATE DATABASE supabase;
     
-    -- Connect to supabase database
-    \c supabase
+    -- No other roles/schemas needed as Supabase is removed.
     
-    -- Enable extensions
+    -- Connect to n8n database (for example, though n8n will handle schema)
+    \c n8n
+    
+    -- Example for n8n/other extensions if needed
     CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-    CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-    CREATE EXTENSION IF NOT EXISTS "pg_net";
-    CREATE EXTENSION IF NOT EXISTS "pgjwt";
-    CREATE EXTENSION IF NOT EXISTS "pg_graphql";
-    CREATE EXTENSION IF NOT EXISTS "pg_stat_statements";
-    CREATE EXTENSION IF NOT EXISTS "pgvector";
     
-    -- Create schemas
-    CREATE SCHEMA IF NOT EXISTS auth;
-    CREATE SCHEMA IF NOT EXISTS storage;
-    CREATE SCHEMA IF NOT EXISTS realtime;
-    CREATE SCHEMA IF NOT EXISTS _realtime;
-    CREATE SCHEMA IF NOT EXISTS graphql_public;
-    
-    -- Create roles
-    CREATE ROLE anon NOLOGIN NOINHERIT;
-    CREATE ROLE authenticated NOLOGIN NOINHERIT;
-    CREATE ROLE service_role NOLOGIN NOINHERIT BYPASSRLS;
-    CREATE ROLE supabase_auth_admin NOLOGIN NOINHERIT;
-    CREATE ROLE supabase_storage_admin NOLOGIN NOINHERIT;
-    CREATE ROLE supabase_admin LOGIN CREATEROLE CREATEDB REPLICATION BYPASSRLS PASSWORD '${POSTGRES_PASSWORD}';
-    CREATE ROLE authenticator NOINHERIT LOGIN PASSWORD '${POSTGRES_PASSWORD}';
-    
-    -- Grant privileges
-    GRANT anon TO authenticator;
-    GRANT authenticated TO authenticator;
-    GRANT service_role TO authenticator;
-    
-    GRANT ALL ON SCHEMA public TO postgres, anon, authenticated, service_role;
-    GRANT ALL ON SCHEMA auth TO supabase_auth_admin;
-    GRANT ALL ON SCHEMA storage TO supabase_storage_admin;
-    GRANT ALL ON SCHEMA _realtime TO supabase_admin;
-    
-    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO postgres, anon, authenticated, service_role;
-    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO postgres, anon, authenticated, service_role;
-    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO postgres, anon, authenticated, service_role;
 EOSQL
 EOFINIT
 
 chmod +x init-scripts/init-db.sh
 print_success "PostgreSQL initialization script created"
 
-# Create Supabase Kong configuration
-if [ ! -d "supabase" ]; then
-    mkdir -p supabase
+# Clean up Supabase directories (even if not strictly necessary, it ensures cleanliness)
+if [ -d "supabase" ]; then
+    rm -rf supabase
 fi
-
-print_info "Creating Supabase Kong configuration..."
-cat > supabase/kong.yml << 'EOFKONG'
-_format_version: "1.1"
-
-services:
-  - name: auth-v1-open
-    url: http://supabase-auth:9999/verify
-    routes:
-      - name: auth-v1-open
-        strip_path: true
-        paths:
-          - /auth/v1/verify
-    plugins:
-      - name: cors
-
-  - name: auth-v1
-    url: http://supabase-auth:9999
-    routes:
-      - name: auth-v1-all
-        strip_path: true
-        paths:
-          - /auth/v1/
-    plugins:
-      - name: cors
-
-  - name: rest-v1
-    url: http://supabase-rest:3000
-    routes:
-      - name: rest-v1-all
-        strip_path: true
-        paths:
-          - /rest/v1/
-    plugins:
-      - name: cors
-      - name: key-auth
-        config:
-          hide_credentials: false
-
-  - name: realtime-v1
-    url: http://supabase-realtime:4000/socket
-    routes:
-      - name: realtime-v1-all
-        strip_path: true
-        paths:
-          - /realtime/v1/
-    plugins:
-      - name: cors
-
-  - name: storage-v1
-    url: http://supabase-storage:5000
-    routes:
-      - name: storage-v1-all
-        strip_path: true
-        paths:
-          - /storage/v1/
-    plugins:
-      - name: cors
-
-consumers:
-  - username: anon
-    keyauth_credentials:
-      - key: ${SUPABASE_ANON_KEY}
-  - username: service_role
-    keyauth_credentials:
-      - key: ${SUPABASE_SERVICE_KEY}
-EOFKONG
-
-print_success "Supabase Kong configuration created"
 
 # Create monitoring configuration
 if [[ "$INSTALL_MONITORING" == "true" ]]; then
@@ -1271,36 +938,28 @@ cat << EOF
 ${GREEN}${BOLD}Installation Summary${NC}
 ${GREEN}═══════════════════════════════════════════${NC}
 
-${CYAN}${BOLD}🚀 Created by Mahmoud Alkhatib${NC}
-${CYAN}YouTube: https://youtube.com/@malkhatib${NC}
-${CYAN}Website: https://malkhatib.com${NC}
-${CYAN}AI Guides: https://aiguide.malkhatib.com${NC}
-
-${GREEN}═══════════════════════════════════════════${NC}
-
-${CYAN}${BOLD}Core Services:${NC}
-  • n8n:       ${GREEN}https://$N8N_SUBDOMAIN.$DOMAIN_NAME${NC}
-  • Qdrant:    ${GREEN}https://qdrant.$DOMAIN_NAME${NC}
-  • Supabase:  ${GREEN}https://supabase.$DOMAIN_NAME${NC}
-  • MinIO API: ${GREEN}https://s3.$DOMAIN_NAME${NC}
-  • MinIO UI:  ${GREEN}https://minio.$DOMAIN_NAME${NC}
-  • Traefik:   ${GREEN}http://$SERVER_IP:8080${NC}
+${CYAN}${BOLD}Core Services URLs:${NC}
+  • n8n (Workflow): ${GREEN}https://$N8N_SUBDOMAIN.$DOMAIN_NAME${NC}
+  • Qdrant (Vector DB): ${GREEN}https://qdrant.$DOMAIN_NAME${NC}
+  • MinIO Console (UI): ${GREEN}https://minio.$DOMAIN_NAME${NC}
+  • MinIO API (S3): ${GREEN}https://s3.$DOMAIN_NAME${NC}
+  • Traefik Dashboard: ${GREEN}http://$SERVER_IP:8080${NC}
 
 EOF
 
 if [[ "$INSTALL_OLLAMA" == "true" ]]; then
-    echo -e "${CYAN}${BOLD}AI Services:${NC}"
-    echo -e "  • Ollama:    ${GREEN}https://ollama.$DOMAIN_NAME${NC}"
+    echo -e "${CYAN}${BOLD}AI Services URLs:${NC}"
+    echo -e "  • Ollama (LLM API): ${GREEN}https://ollama.$DOMAIN_NAME${NC}"
 fi
 
 if [[ "$INSTALL_OPENWEBUI" == "true" ]]; then
-    echo -e "  • Open WebUI: ${GREEN}https://ai.$DOMAIN_NAME${NC}"
+    echo -e "  • Open WebUI (Chat): ${GREEN}https://ai.$DOMAIN_NAME${NC}"
 fi
 
 if [[ "$INSTALL_MONITORING" == "true" ]]; then
     echo ""
-    echo -e "${CYAN}${BOLD}Monitoring:${NC}"
-    echo -e "  • Grafana:    ${GREEN}https://grafana.$DOMAIN_NAME${NC}"
+    echo -e "${CYAN}${BOLD}Monitoring URLs:${NC}"
+    echo -e "  • Grafana: ${GREEN}https://grafana.$DOMAIN_NAME${NC}"
     echo -e "  • Prometheus: ${GREEN}https://prometheus.$DOMAIN_NAME${NC}"
 fi
 
@@ -1310,13 +969,13 @@ fi
 
 if [[ "$INSTALL_PORTAINER" == "true" ]]; then
     echo ""
-    echo -e "${CYAN}${BOLD}Management:${NC}"
-    echo -e "  • Portainer:  ${GREEN}https://portainer.$DOMAIN_NAME${NC}"
+    echo -e "${CYAN}${BOLD}Management URLs:${NC}"
+    echo -e "  • Portainer: ${GREEN}https://portainer.$DOMAIN_NAME${NC}"
 fi
 
 cat << EOF
 
-${CYAN}${BOLD}Credentials:${NC}
+${CYAN}${BOLD}Credentials (Saved in .env):${NC}
 
   ${BOLD}PostgreSQL:${NC}
     User:     postgres
@@ -1327,12 +986,6 @@ ${CYAN}${BOLD}Credentials:${NC}
     
   ${BOLD}Qdrant:${NC}
     API Key:  $QDRANT_API_KEY
-    
-  ${BOLD}Supabase:${NC}
-    JWT Secret:     $SUPABASE_JWT_SECRET
-    Anon Key:       $SUPABASE_ANON_KEY
-    Service Key:    $SUPABASE_SERVICE_KEY
-    Dashboard Pass: $SUPABASE_DASHBOARD_PASSWORD
     
   ${BOLD}MinIO:${NC}
     User:     $MINIO_ROOT_USER
@@ -1350,6 +1003,13 @@ EOFGRAF
 fi
 
 cat << EOF
+
+${GREEN}═══════════════════════════════════════════${NC}
+${GREEN}${BOLD}Thank you for using my script!${NC}
+${GREEN}Subscribe for more AI Guides:${NC}
+${CYAN}YouTube: https://youtube.com/@malkhatib${NC}
+${GREEN}═══════════════════════════════════════════${NC}
+
 ${CYAN}${BOLD}Installation Location:${NC}
   • Directory: ${GREEN}$(pwd)${NC}
 
@@ -1359,19 +1019,16 @@ ${CYAN}${BOLD}Next Steps:${NC}
      Visit: https://$N8N_SUBDOMAIN.$DOMAIN_NAME
      Create your owner account on first visit
 
-  ${BOLD}2. Access Supabase:${NC}
-     Visit: https://supabase.$DOMAIN_NAME
-     Use the dashboard password above
-
-  ${BOLD}3. Configure MinIO:${NC}
+  ${BOLD}2. Configure MinIO:${NC}
      Visit: https://minio.$DOMAIN_NAME
-     Login and create your first bucket
+     Login with the credentials above and create your first bucket
 
 EOF
 
 if [[ "$INSTALL_OLLAMA" == "true" ]]; then
+    # FIXED: The delimiter is flush left, ensuring no syntax error.
     cat << EOFOLLAMA2
-  ${BOLD}4. Setup Ollama:${NC}
+  ${BOLD}3. Setup Ollama:${NC}
      Pull a model: docker compose exec ollama ollama pull llama2
      Test: curl https://ollama.$DOMAIN_NAME/api/tags
 
@@ -1379,8 +1036,9 @@ EOFOLLAMA2
 fi
 
 if [[ "$INSTALL_MONITORING" == "true" ]]; then
+    # FIXED: The delimiter is flush left, ensuring no syntax error.
     cat << EOFGRAF2
-  ${BOLD}5. Configure Grafana:${NC}
+  ${BOLD}4. Configure Grafana:${NC}
      Visit: https://grafana.$DOMAIN_NAME
      Add Prometheus data source: http://prometheus:9090
 
@@ -1393,43 +1051,13 @@ ${CYAN}${BOLD}Useful Commands:${NC}
   ${BOLD}View logs:${NC}
     docker compose logs -f
 
-  ${BOLD}View specific service:${NC}
-    docker compose logs -f n8n
-    docker compose logs -f qdrant
-    docker compose logs -f supabase-studio
-
-  ${BOLD}Restart services:${NC}
-    docker compose restart
-
-  ${BOLD}Stop services:${NC}
-    docker compose down
-
-  ${BOLD}Update services:${NC}
-    docker compose pull
-    docker compose up -d
-
   ${BOLD}Check status:${NC}
     docker compose ps
-
-  ${BOLD}Backup data:${NC}
-    tar czf backup-\$(date +%Y%m%d).tar.gz .
 
 ${YELLOW}${BOLD}⚠️  IMPORTANT:${NC}
   • SSL certificates may take 2-5 minutes to generate
   • Keep your .env file secure - it contains all passwords!
-  • Set up regular backups of data directories
   • All credentials are saved in: ${YELLOW}.env${NC}
-
-${GREEN}${BOLD}📚 Learn More:${NC}
-  • Subscribe on YouTube: ${CYAN}https://youtube.com/@malkhatib${NC}
-  • AI Guides Portal: ${CYAN}https://aiguide.malkhatib.com${NC}
-  • Main Website: ${CYAN}https://malkhatib.com${NC}
-
-${GREEN}${BOLD}Documentation:${NC}
-  • n8n: https://docs.n8n.io
-  • Qdrant: https://qdrant.tech/documentation/
-  • Supabase: https://supabase.com/docs
-  • MinIO: https://min.io/docs/minio/linux/index.html
 
 ${GREEN}═══════════════════════════════════════════${NC}
 ${GREEN}${BOLD}🚀 Installation Complete!${NC}
@@ -1456,7 +1084,6 @@ Domain: $DOMAIN_NAME
 Core Services:
 - n8n: https://$N8N_SUBDOMAIN.$DOMAIN_NAME
 - Qdrant: https://qdrant.$DOMAIN_NAME
-- Supabase: https://supabase.$DOMAIN_NAME
 - MinIO: https://minio.$DOMAIN_NAME
 
 Optional Services Installed:
