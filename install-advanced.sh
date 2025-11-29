@@ -2,7 +2,6 @@
 
 ################################################################################
 # Advanced Automation Stack - Automated Installation Script
-# https://www.youtube.com/@malkhatib
 # Core: n8n, PostgreSQL, Redis, Qdrant, Supabase, MinIO
 # Optional: Ollama, Grafana+Prometheus, Uptime Kuma, Portainer, Open WebUI
 ################################################################################
@@ -80,22 +79,32 @@ clear
 cat << "EOF"
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
-║   Advanced Automation Stack - Automated Installer        ║
+║        🚀 Advanced Automation Stack Installer 🚀          ║
 ║                                                           ║
-║   Core Services:                                         ║
-║   • n8n (Workflow Automation)                           ║
-║   • PostgreSQL (Database)                               ║
-║   • Redis (Cache/Queue)                                 ║
-║   • Qdrant (Vector Database)                            ║
-║   • Supabase (Backend API)                              ║
-║   • MinIO (Object Storage)                              ║
+║              Created by: Mahmoud Alkhatib                 ║
+║         YouTube: youtube.com/@malkhatib                   ║
+║         Website: malkhatib.com                            ║
 ║                                                           ║
-║   Optional Services:                                     ║
-║   • Ollama (Local LLM)                                  ║
-║   • Grafana + Prometheus (Monitoring)                   ║
-║   • Uptime Kuma (Service Monitoring)                    ║
-║   • Portainer (Container Management)                    ║
-║   • Open WebUI (AI Chat Interface)                      ║
+║   ─────────────────────────────────────────────────────  ║
+║                                                           ║
+║   Core Services (Always Installed):                      ║
+║   ✓ n8n - Workflow Automation                           ║
+║   ✓ PostgreSQL - Database                               ║
+║   ✓ Redis - Cache/Queue                                 ║
+║   ✓ Qdrant - Vector Database for AI                     ║
+║   ✓ Supabase - Complete Backend API                     ║
+║   ✓ MinIO - S3 Object Storage                           ║
+║   ✓ Traefik - Reverse Proxy with SSL                    ║
+║                                                           ║
+║   Optional Services (You Choose):                        ║
+║   ⭐ Ollama - Local LLM (AI Models)                      ║
+║   ⭐ Open WebUI - AI Chat Interface                      ║
+║   ⭐ Grafana + Prometheus - Monitoring                   ║
+║   ⭐ Uptime Kuma - Service Monitoring                    ║
+║   ⭐ Portainer - Container Management                    ║
+║                                                           ║
+║   طريقك للذكاء الاصطناعي المحلي                         ║
+║   Your Path to Self-Hosted AI Infrastructure             ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
 EOF
@@ -436,8 +445,6 @@ cd "$DEPLOY_DIR"
 print_info "Creating docker-compose.yml..."
 
 cat > docker-compose.yml << 'EOFCOMPOSE'
-version: "3.9"
-
 services:
   # Traefik - Reverse Proxy with SSL
   traefik:
@@ -556,7 +563,7 @@ services:
 
   # Supabase Studio
   supabase-studio:
-    image: supabase/studio:latest
+    image: supabase/studio:20231123-64e91e7
     restart: always
     environment:
       - SUPABASE_URL=https://supabase.${DOMAIN_NAME}
@@ -593,7 +600,7 @@ services:
 
   # Supabase Auth
   supabase-auth:
-    image: supabase/gotrue:latest
+    image: supabase/gotrue:v2.99.0
     restart: always
     environment:
       - GOTRUE_API_HOST=0.0.0.0
@@ -628,7 +635,7 @@ services:
 
   # Supabase Realtime
   supabase-realtime:
-    image: supabase/realtime:latest
+    image: supabase/realtime:v2.25.35
     restart: always
     environment:
       - PORT=4000
@@ -647,7 +654,7 @@ services:
 
   # Supabase Storage
   supabase-storage:
-    image: supabase/storage-api:latest
+    image: supabase/storage-api:v0.43.11
     restart: always
     environment:
       - ANON_KEY=${SUPABASE_ANON_KEY}
@@ -671,7 +678,7 @@ services:
 
   # Supabase Meta
   supabase-meta:
-    image: supabase/postgres-meta:latest
+    image: supabase/postgres-meta:v0.68.0
     restart: always
     environment:
       - PG_META_PORT=8080
@@ -1151,6 +1158,13 @@ cat << EOF
 ${GREEN}${BOLD}Installation Summary${NC}
 ${GREEN}═══════════════════════════════════════════${NC}
 
+${CYAN}${BOLD}🚀 Created by Mahmoud Alkhatib${NC}
+${CYAN}YouTube: https://youtube.com/@malkhatib${NC}
+${CYAN}Website: https://malkhatib.com${NC}
+${CYAN}AI Guides: https://aiguide.malkhatib.com${NC}
+
+${GREEN}═══════════════════════════════════════════${NC}
+
 ${CYAN}${BOLD}Core Services:${NC}
   • n8n:       ${GREEN}https://$N8N_SUBDOMAIN.$DOMAIN_NAME${NC}
   • Qdrant:    ${GREEN}https://qdrant.$DOMAIN_NAME${NC}
@@ -1293,6 +1307,11 @@ ${YELLOW}${BOLD}⚠️  IMPORTANT:${NC}
   • Set up regular backups of data directories
   • All credentials are saved in: ${YELLOW}.env${NC}
 
+${GREEN}${BOLD}📚 Learn More:${NC}
+  • Subscribe on YouTube: ${CYAN}https://youtube.com/@malkhatib${NC}
+  • AI Guides Portal: ${CYAN}https://aiguide.malkhatib.com${NC}
+  • Main Website: ${CYAN}https://malkhatib.com${NC}
+
 ${GREEN}${BOLD}Documentation:${NC}
   • n8n: https://docs.n8n.io
   • Qdrant: https://qdrant.tech/documentation/
@@ -1300,13 +1319,23 @@ ${GREEN}${BOLD}Documentation:${NC}
   • MinIO: https://min.io/docs/minio/linux/index.html
 
 ${GREEN}═══════════════════════════════════════════${NC}
-${GREEN}${BOLD}Thank you for using this installer!${NC}
+${GREEN}${BOLD}🚀 Installation Complete!${NC}
+${GREEN}طريقك للذكاء الاصطناعي المحلي${NC}
+${GREEN}Your Path to Self-Hosted AI Infrastructure${NC}
 ${GREEN}═══════════════════════════════════════════${NC}
 
 EOF
 
 # Save installation info
 cat > INSTALLATION_INFO.txt << EOFINST
+╔═══════════════════════════════════════════════════════════╗
+║     🚀 Advanced Automation Stack - Installation Info      ║
+║                                                           ║
+║              Created by: Mahmoud Alkhatib                 ║
+║         YouTube: youtube.com/@malkhatib                   ║
+║         Website: malkhatib.com                            ║
+╚═══════════════════════════════════════════════════════════╝
+
 Installation completed on: $(date)
 Server IP: $SERVER_IP
 Domain: $DOMAIN_NAME
@@ -1328,6 +1357,16 @@ Timezone: $GENERIC_TIMEZONE
 Installation Directory: $(pwd)
 
 All credentials are stored in .env file
+
+═══════════════════════════════════════════════════════════
+Learn More:
+- YouTube: https://youtube.com/@malkhatib
+- AI Guides: https://aiguide.malkhatib.com
+- Website: https://malkhatib.com
+
+طريقك للذكاء الاصطناعي المحلي
+Your Path to Self-Hosted AI Infrastructure
+═══════════════════════════════════════════════════════════
 EOFINST
 
 print_success "Installation information saved to INSTALLATION_INFO.txt"
