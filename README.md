@@ -166,7 +166,10 @@ nslookup n8n.yourdomain.com
 
 ```bash
 # Download the installer
-wget https://raw.githubusercontent.com/YOUR_REPO/install-advanced.sh
+git clone https://raw.githubusercontent.com/YOUR_REPO/install-advanced.sh](https://github.com/makhatib/AI-stack.git
+
+# Enter folder 
+cd AI-stack
 
 # Make executable
 chmod +x install-advanced.sh
