@@ -54,14 +54,14 @@ This comprehensive installer deploys a complete **AI-powered automation infrastr
 
 ### **Optional Services** (Choose During Installation)
 
-#### 8. **Ollama** - Local LLM 🤖
+#### 7. **Ollama** - Local LLM 🤖
 - Run AI models locally
 - No API costs (GPT-like capabilities)
 - Privacy-first
 - Generate embeddings for Qdrant
 - **URL:** `https://ollama.yourdomain.com`
 
-#### 9. **Open WebUI** - AI Chat Interface 🤖
+#### 8. **Open WebUI** - AI Chat Interface 🤖
 - Beautiful chat interface for Ollama
 - Multiple model support
 - Chat history
@@ -69,7 +69,7 @@ This comprehensive installer deploys a complete **AI-powered automation infrastr
 - **URL:** `https://ai.yourdomain.com`
 - **Requires:** Ollama
 
-#### 10. **Grafana + Prometheus** - Monitoring Stack 📊
+#### 9. **Grafana + Prometheus** - Monitoring Stack 📊
 - Monitor all services
 - Custom dashboards
 - Metrics collection
@@ -77,14 +77,14 @@ This comprehensive installer deploys a complete **AI-powered automation infrastr
 - **Grafana:** `https://grafana.yourdomain.com`
 - **Prometheus:** `https://prometheus.yourdomain.com`
 
-#### 11. **Uptime Kuma** - Service Monitoring 📈
+#### 10. **Uptime Kuma** - Service Monitoring 📈
 - Monitor service uptime
 - SMS/Email/Webhook alerts
 - Beautiful status page
 - Response time tracking
 - **URL:** `https://uptime.yourdomain.com`
 
-#### 12. **Portainer** - Container Management 🐳
+#### 11. **Portainer** - Container Management 🐳
 - Visual Docker management
 - Container logs & stats
 - Easy updates
