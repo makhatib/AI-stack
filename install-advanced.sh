@@ -580,12 +580,12 @@ services:
     environment:
       HOSTNAME: "::"
       STUDIO_PG_META_URL: http://supabase-meta:8080
-      POSTGRES_PASSWORD: \${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       SUPABASE_URL: http://supabase-kong:8000
-      SUPABASE_PUBLIC_URL: https://supabase.\${DOMAIN_NAME}
-      SUPABASE_ANON_KEY: \${SUPABASE_ANON_KEY}
-      SUPABASE_SERVICE_KEY: \${SUPABASE_SERVICE_KEY}
-      AUTH_JWT_SECRET: \${SUPABASE_JWT_SECRET}
+      SUPABASE_PUBLIC_URL: https://supabase.${DOMAIN_NAME}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+      AUTH_JWT_SECRET: ${SUPABASE_JWT_SECRET}
       NEXT_PUBLIC_ENABLE_LOGS: "true"
       NEXT_ANALYTICS_BACKEND_PROVIDER: postgres
     networks:
@@ -594,7 +594,7 @@ services:
       - supabase-meta
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.supabase.rule=Host(\`supabase.\${DOMAIN_NAME}\`)"
+      - "traefik.http.routers.supabase.rule=Host('supabase.${DOMAIN_NAME}')"
       - "traefik.http.routers.supabase.tls=true"
       - "traefik.http.routers.supabase.entrypoints=websecure"
       - "traefik.http.routers.supabase.tls.certresolver=letsencrypt"
@@ -611,8 +611,8 @@ services:
       KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth
       KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
       KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
-      SUPABASE_ANON_KEY: \${SUPABASE_ANON_KEY}
-      SUPABASE_SERVICE_KEY: \${SUPABASE_SERVICE_KEY}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
     volumes:
       - ./supabase/kong.yml:/var/lib/kong/kong.yml
     networks:
@@ -643,11 +643,11 @@ services:
     environment:
       GOTRUE_API_HOST: 0.0.0.0
       GOTRUE_API_PORT: "9999"
-      API_EXTERNAL_URL: https://supabase.\${DOMAIN_NAME}
+      API_EXTERNAL_URL: https://supabase.${DOMAIN_NAME}
       GOTRUE_DB_DRIVER: postgres
-      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:\${POSTGRES_PASSWORD}@postgres:5432/supabase
-      GOTRUE_SITE_URL: https://supabase.\${DOMAIN_NAME}
-      GOTRUE_JWT_SECRET: \${SUPABASE_JWT_SECRET}
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@postgres:5432/supabase
+      GOTRUE_SITE_URL: https://supabase.${DOMAIN_NAME}
+      GOTRUE_JWT_SECRET: ${SUPABASE_JWT_SECRET}
       GOTRUE_JWT_EXP: "3600"
       GOTRUE_DISABLE_SIGNUP: "false"
       GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
@@ -663,12 +663,12 @@ services:
     image: postgrest/postgrest:v13.0.7
     restart: always
     environment:
-      PGRST_DB_URI: postgres://authenticator:\${POSTGRES_PASSWORD}@postgres:5432/supabase
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@postgres:5432/supabase
       PGRST_DB_SCHEMAS: public,storage,graphql_public
       PGRST_DB_ANON_ROLE: anon
-      PGRST_JWT_SECRET: \${SUPABASE_JWT_SECRET}
+      PGRST_JWT_SECRET: ${SUPABASE_JWT_SECRET}
       PGRST_DB_USE_LEGACY_GUCS: "false"
-      PGRST_APP_SETTINGS_JWT_SECRET: \${SUPABASE_JWT_SECRET}
+      PGRST_APP_SETTINGS_JWT_SECRET: ${SUPABASE_JWT_SECRET}
       PGRST_APP_SETTINGS_JWT_EXP: "3600"
     networks:
       - automation-network
@@ -690,7 +690,7 @@ services:
           "-o",
           "/dev/null",
           "-H",
-          "Authorization: Bearer \${SUPABASE_ANON_KEY}",
+          "Authorization: Bearer ${SUPABASE_ANON_KEY}",
           "http://localhost:4000/api/tenants/realtime-dev/health"
         ]
       timeout: 5s
@@ -701,12 +701,12 @@ services:
       DB_HOST: postgres
       DB_PORT: "5432"
       DB_USER: supabase_admin
-      DB_PASSWORD: \${POSTGRES_PASSWORD}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_NAME: supabase
       DB_AFTER_CONNECT_QUERY: "SET search_path TO _realtime"
       DB_ENC_KEY: supabaserealtime
-      API_JWT_SECRET: \${SUPABASE_JWT_SECRET}
-      SECRET_KEY_BASE: \${SUPABASE_SECRET_KEY_BASE}
+      API_JWT_SECRET: ${SUPABASE_JWT_SECRET}
+      SECRET_KEY_BASE: ${SUPABASE_SECRET_KEY_BASE}
       ERL_AFLAGS: "-proto_dist inet_tcp"
       DNS_NODES: "''"
       APP_NAME: realtime
@@ -736,11 +736,11 @@ services:
       interval: 5s
       retries: 3
     environment:
-      ANON_KEY: \${SUPABASE_ANON_KEY}
-      SERVICE_KEY: \${SUPABASE_SERVICE_KEY}
+      ANON_KEY: ${SUPABASE_ANON_KEY}
+      SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
       POSTGREST_URL: http://supabase-rest:3000
-      PGRST_JWT_SECRET: \${SUPABASE_JWT_SECRET}
-      DATABASE_URL: postgres://supabase_storage_admin:\${POSTGRES_PASSWORD}@postgres:5432/supabase
+      PGRST_JWT_SECRET: ${SUPABASE_JWT_SECRET}
+      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@postgres:5432/supabase
       FILE_SIZE_LIMIT: "52428800"
       STORAGE_BACKEND: file
       FILE_STORAGE_BACKEND_PATH: /var/lib/storage
@@ -765,7 +765,7 @@ services:
       PG_META_DB_PORT: "5432"
       PG_META_DB_NAME: supabase
       PG_META_DB_USER: supabase_admin
-      PG_META_DB_PASSWORD: \${POSTGRES_PASSWORD}
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
     networks:
       - automation-network
     depends_on:
