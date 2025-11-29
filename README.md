@@ -231,7 +231,6 @@ Internet
 Traefik (SSL/Reverse Proxy)
    ├─→ n8n → PostgreSQL
    ├─→ Qdrant (Vector Search)
-   ├─→ Supabase → PostgreSQL
    │    ├─→ Auth
    │    ├─→ REST API
    │    ├─→ Realtime
@@ -335,26 +334,9 @@ File upload → MinIO
 
 **Useful n8n Nodes:**
 - **Qdrant:** Vector search operations
-- **Supabase:** Database operations via REST API
 - **S3/MinIO:** File storage operations
 - **HTTP Request:** Call Ollama API
 - **PostgreSQL:** Direct database queries
-
-### Configure Supabase
-
-1. Visit `https://supabase.yourdomain.com`
-2. Login with dashboard password (from `.env`)
-3. Create your first table
-4. Generate API keys
-5. Test REST API
-
-**Supabase API:**
-```bash
-# Example REST API call
-curl https://supabase.yourdomain.com/rest/v1/your_table \
-  -H "apikey: YOUR_ANON_KEY" \
-  -H "Authorization: Bearer YOUR_ANON_KEY"
-```
 
 ### Configure MinIO
 
@@ -745,29 +727,6 @@ docker compose up -d ollama
 👉 الديسكورد:   / discord  
 👉 تليجرام: https://t.me/+YAHmKBLoLWoxNWQ0
 👉 تويتر:   / malkhateeb  
-
-
----
-
-## 📊 Resource Requirements by Configuration
-
-### Minimal (Core Services Only)
-- **RAM:** 4GB
-- **CPU:** 2 cores
-- **Disk:** 30GB
-- **Services:** 12
-
-### Standard (Core + Ollama + Monitoring)
-- **RAM:** 8GB
-- **CPU:** 4 cores  
-- **Disk:** 50GB
-- **Services:** 16
-
-### Full Stack (All Services)
-- **RAM:** 16GB
-- **CPU:** 8 cores
-- **Disk:** 100GB
-- **Services:** 18
 
 ---
 
