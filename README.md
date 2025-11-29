@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://media.licdn.com/dms/image/v2/D4D16AQFqdNamtkN1zA/profile-displaybackgroundimage-shrink_200_800/profile-displaybackgroundimage-shrink_200_800/0/1719354356592?e=2147483647&v=beta&t=Gix6oMHUtn3k9wB7Ac2-Sh7hKFpvtAglgFJkrZKYHJo" alt="شعار قناة محمود الخطيب" width="100%" />
+</p>
+
 # 🚀 Advanced Automation Stack - Automated Installer
 
 ## Overview
