@@ -358,6 +358,7 @@ print_success "QDRANT_API_KEY generated (64 characters)"
 SUPABASE_JWT_SECRET=$(generate_secret 32)
 SUPABASE_ANON_KEY=$(generate_secret 32)
 SUPABASE_SERVICE_KEY=$(generate_secret 32)
+SUPABASE_SECRET_KEY_BASE=$(generate_secret 32)
 SUPABASE_DASHBOARD_PASSWORD=$(generate_secret 16)
 print_success "SUPABASE keys generated"
 
@@ -563,14 +564,34 @@ services:
 
   # Supabase Studio
   supabase-studio:
-    image: supabase/studio:20231123-64e91e7
+    image: supabase/studio:2025.11.26-sha-8f096b5
     restart: always
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://studio:3000/api/platform/profile').then((r) => {if (r.status !== 200) throw new Error(r.status)})"
+        ]
+      timeout: 10s
+      interval: 5s
+      retries: 3
     environment:
-      - SUPABASE_URL=https://supabase.${DOMAIN_NAME}
-      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - HOSTNAME=::
       - STUDIO_PG_META_URL=http://supabase-meta:8080
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - SUPABASE_URL=http://supabase-kong:8000
+      - SUPABASE_PUBLIC_URL=https://supabase.${DOMAIN_NAME}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - AUTH_JWT_SECRET=${SUPABASE_JWT_SECRET}
+      - NEXT_PUBLIC_ENABLE_LOGS=true
+      - NEXT_ANALYTICS_BACKEND_PROVIDER=postgres
     networks:
       - automation-network
+    depends_on:
+      - supabase-meta
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.supabase.rule=Host(`supabase.${DOMAIN_NAME}`)"
@@ -581,13 +602,17 @@ services:
 
   # Supabase Kong (API Gateway)
   supabase-kong:
-    image: kong:latest
+    image: kong:2.8.1
     restart: always
     environment:
       - KONG_DATABASE=off
       - KONG_DECLARATIVE_CONFIG=/var/lib/kong/kong.yml
       - KONG_DNS_ORDER=LAST,A,CNAME
-      - KONG_PLUGINS=request-transformer,cors,key-auth,acl
+      - KONG_PLUGINS=request-transformer,cors,key-auth,acl,basic-auth
+      - KONG_NGINX_PROXY_PROXY_BUFFER_SIZE=160k
+      - KONG_NGINX_PROXY_PROXY_BUFFERS=64 160k
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
     volumes:
       - ./supabase/kong.yml:/var/lib/kong/kong.yml
     networks:
@@ -600,18 +625,33 @@ services:
 
   # Supabase Auth
   supabase-auth:
-    image: supabase/gotrue:v2.99.0
+    image: supabase/gotrue:v2.183.0
     restart: always
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:9999/health"
+        ]
+      timeout: 5s
+      interval: 5s
+      retries: 3
     environment:
       - GOTRUE_API_HOST=0.0.0.0
       - GOTRUE_API_PORT=9999
       - API_EXTERNAL_URL=https://supabase.${DOMAIN_NAME}
       - GOTRUE_DB_DRIVER=postgres
-      - GOTRUE_DB_DATABASE_URL=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/supabase?search_path=auth
+      - GOTRUE_DB_DATABASE_URL=postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@postgres:5432/supabase
       - GOTRUE_SITE_URL=https://supabase.${DOMAIN_NAME}
       - GOTRUE_JWT_SECRET=${SUPABASE_JWT_SECRET}
       - GOTRUE_JWT_EXP=3600
       - GOTRUE_DISABLE_SIGNUP=false
+      - GOTRUE_EXTERNAL_EMAIL_ENABLED=true
+      - GOTRUE_MAILER_AUTOCONFIRM=false
     networks:
       - automation-network
     depends_on:
@@ -620,13 +660,16 @@ services:
 
   # Supabase REST (PostgREST)
   supabase-rest:
-    image: postgrest/postgrest:latest
+    image: postgrest/postgrest:v13.0.7
     restart: always
     environment:
-      - PGRST_DB_URI=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/supabase
-      - PGRST_DB_SCHEMAS=public,storage
+      - PGRST_DB_URI=postgres://authenticator:${POSTGRES_PASSWORD}@postgres:5432/supabase
+      - PGRST_DB_SCHEMAS=public,storage,graphql_public
       - PGRST_DB_ANON_ROLE=anon
       - PGRST_JWT_SECRET=${SUPABASE_JWT_SECRET}
+      - PGRST_DB_USE_LEGACY_GUCS=false
+      - PGRST_APP_SETTINGS_JWT_SECRET=${SUPABASE_JWT_SECRET}
+      - PGRST_APP_SETTINGS_JWT_EXP=3600
     networks:
       - automation-network
     depends_on:
@@ -635,17 +678,40 @@ services:
 
   # Supabase Realtime
   supabase-realtime:
-    image: supabase/realtime:v2.25.35
+    image: supabase/realtime:v2.65.3
     restart: always
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-sSfL",
+          "--head",
+          "-o",
+          "/dev/null",
+          "-H",
+          "Authorization: Bearer ${SUPABASE_ANON_KEY}",
+          "http://localhost:4000/api/tenants/realtime-dev/health"
+        ]
+      timeout: 5s
+      interval: 5s
+      retries: 3
     environment:
       - PORT=4000
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_USER=postgres
+      - DB_USER=supabase_admin
       - DB_PASSWORD=${POSTGRES_PASSWORD}
       - DB_NAME=supabase
-      - DB_SSL=false
-      - JWT_SECRET=${SUPABASE_JWT_SECRET}
+      - DB_AFTER_CONNECT_QUERY=SET search_path TO _realtime
+      - DB_ENC_KEY=supabaserealtime
+      - API_JWT_SECRET=${SUPABASE_JWT_SECRET}
+      - SECRET_KEY_BASE=${SUPABASE_SECRET_KEY_BASE}
+      - ERL_AFLAGS=-proto_dist inet_tcp
+      - DNS_NODES="''"
+      - APP_NAME=realtime
+      - SEED_SELF_HOST=true
+      - RUN_JANITOR=true
     networks:
       - automation-network
     depends_on:
@@ -654,14 +720,27 @@ services:
 
   # Supabase Storage
   supabase-storage:
-    image: supabase/storage-api:v0.43.11
+    image: supabase/storage-api:v1.32.0
     restart: always
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://storage:5000/status"
+        ]
+      timeout: 5s
+      interval: 5s
+      retries: 3
     environment:
       - ANON_KEY=${SUPABASE_ANON_KEY}
       - SERVICE_KEY=${SUPABASE_SERVICE_KEY}
       - POSTGREST_URL=http://supabase-rest:3000
       - PGRST_JWT_SECRET=${SUPABASE_JWT_SECRET}
-      - DATABASE_URL=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/supabase
+      - DATABASE_URL=postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@postgres:5432/supabase
       - FILE_SIZE_LIMIT=52428800
       - STORAGE_BACKEND=file
       - FILE_STORAGE_BACKEND_PATH=/var/lib/storage
@@ -678,14 +757,14 @@ services:
 
   # Supabase Meta
   supabase-meta:
-    image: supabase/postgres-meta:v0.68.0
+    image: supabase/postgres-meta:v0.93.1
     restart: always
     environment:
       - PG_META_PORT=8080
       - PG_META_DB_HOST=postgres
       - PG_META_DB_PORT=5432
       - PG_META_DB_NAME=supabase
-      - PG_META_DB_USER=postgres
+      - PG_META_DB_USER=supabase_admin
       - PG_META_DB_PASSWORD=${POSTGRES_PASSWORD}
     networks:
       - automation-network
@@ -946,6 +1025,7 @@ QDRANT_API_KEY=$QDRANT_API_KEY
 SUPABASE_JWT_SECRET=$SUPABASE_JWT_SECRET
 SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
 SUPABASE_SERVICE_KEY=$SUPABASE_SERVICE_KEY
+SUPABASE_SECRET_KEY_BASE=$SUPABASE_SECRET_KEY_BASE
 SUPABASE_DASHBOARD_PASSWORD=$SUPABASE_DASHBOARD_PASSWORD
 
 # ==============================================
@@ -979,18 +1059,51 @@ cat > init-scripts/init-db.sh << 'EOFINIT'
 set -e
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
+    -- Create databases
     CREATE DATABASE n8n;
     CREATE DATABASE supabase;
     
-    -- Enable extensions for Supabase
+    -- Connect to supabase database
     \c supabase
+    
+    -- Enable extensions
     CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
     CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+    CREATE EXTENSION IF NOT EXISTS "pg_net";
     CREATE EXTENSION IF NOT EXISTS "pgjwt";
+    CREATE EXTENSION IF NOT EXISTS "pg_graphql";
+    CREATE EXTENSION IF NOT EXISTS "pg_stat_statements";
+    CREATE EXTENSION IF NOT EXISTS "pgvector";
     
-    -- Create auth schema for Supabase
+    -- Create schemas
     CREATE SCHEMA IF NOT EXISTS auth;
     CREATE SCHEMA IF NOT EXISTS storage;
+    CREATE SCHEMA IF NOT EXISTS realtime;
+    CREATE SCHEMA IF NOT EXISTS _realtime;
+    CREATE SCHEMA IF NOT EXISTS graphql_public;
+    
+    -- Create roles
+    CREATE ROLE anon NOLOGIN NOINHERIT;
+    CREATE ROLE authenticated NOLOGIN NOINHERIT;
+    CREATE ROLE service_role NOLOGIN NOINHERIT BYPASSRLS;
+    CREATE ROLE supabase_auth_admin NOLOGIN NOINHERIT;
+    CREATE ROLE supabase_storage_admin NOLOGIN NOINHERIT;
+    CREATE ROLE supabase_admin LOGIN CREATEROLE CREATEDB REPLICATION BYPASSRLS PASSWORD '${POSTGRES_PASSWORD}';
+    CREATE ROLE authenticator NOINHERIT LOGIN PASSWORD '${POSTGRES_PASSWORD}';
+    
+    -- Grant privileges
+    GRANT anon TO authenticator;
+    GRANT authenticated TO authenticator;
+    GRANT service_role TO authenticator;
+    
+    GRANT ALL ON SCHEMA public TO postgres, anon, authenticated, service_role;
+    GRANT ALL ON SCHEMA auth TO supabase_auth_admin;
+    GRANT ALL ON SCHEMA storage TO supabase_storage_admin;
+    GRANT ALL ON SCHEMA _realtime TO supabase_admin;
+    
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO postgres, anon, authenticated, service_role;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO postgres, anon, authenticated, service_role;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO postgres, anon, authenticated, service_role;
 EOSQL
 EOFINIT
 
