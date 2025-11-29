@@ -61,12 +61,6 @@ This comprehensive installer deploys a complete **AI-powered automation infrastr
 - Generate embeddings for Qdrant
 - **URL:** `https://ollama.yourdomain.com`
 
-**Use Cases:**
-- Generate embeddings from text
-- Answer questions with RAG
-- Summarize documents
-- Extract information
-
 #### 9. **Open WebUI** - AI Chat Interface 🤖
 - Beautiful chat interface for Ollama
 - Multiple model support
