@@ -2,11 +2,9 @@
 
 ################################################################################
 # Advanced Automation Stack - Automated Installation Script
-https://www.youtube.com/@malkhatib
-
+# https://www.youtube.com/@malkhatib
 # Core: n8n, PostgreSQL, Redis, Qdrant, Supabase, MinIO
 # Optional: Ollama, Grafana+Prometheus, Uptime Kuma, Portainer, Open WebUI
-
 ################################################################################
 
 set -e  # Exit on error
@@ -716,19 +714,6 @@ services:
       - "traefik.http.routers.minio-console.tls.certresolver=letsencrypt"
       - "traefik.http.routers.minio-console.service=minio-console"
       - "traefik.http.services.minio-console.loadbalancer.server.port=9001"
-
-volumes:
-  traefik_data:
-  postgres_data:
-  redis_data:
-  n8n_data:
-  qdrant_data:
-  supabase_storage:
-  minio_data:
-
-networks:
-  automation-network:
-    driver: bridge
 EOFCOMPOSE
 
 # Add optional services to docker-compose.yml
@@ -751,9 +736,6 @@ if [[ "$INSTALL_OLLAMA" == "true" ]]; then
       - "traefik.http.routers.ollama.tls.certresolver=letsencrypt"
       - "traefik.http.services.ollama.loadbalancer.server.port=11434"
 EOFOLLAMA
-    
-    # Add to volumes section
-    echo "  ollama_data:" >> docker-compose.yml
 fi
 
 if [[ "$INSTALL_OPENWEBUI" == "true" ]]; then
@@ -779,9 +761,6 @@ if [[ "$INSTALL_OPENWEBUI" == "true" ]]; then
       - "traefik.http.routers.openwebui.tls.certresolver=letsencrypt"
       - "traefik.http.services.openwebui.loadbalancer.server.port=8080"
 EOFOPENWEBUI
-    
-    # Add to volumes section
-    echo "  open_webui_data:" >> docker-compose.yml
 fi
 
 if [[ "$INSTALL_MONITORING" == "true" ]]; then
@@ -833,10 +812,6 @@ if [[ "$INSTALL_MONITORING" == "true" ]]; then
       - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
 EOFMONITORING
-    
-    # Add to volumes section
-    echo "  prometheus_data:" >> docker-compose.yml
-    echo "  grafana_data:" >> docker-compose.yml
 fi
 
 if [[ "$INSTALL_UPTIME" == "true" ]]; then
@@ -858,9 +833,6 @@ if [[ "$INSTALL_UPTIME" == "true" ]]; then
       - "traefik.http.routers.uptime.tls.certresolver=letsencrypt"
       - "traefik.http.services.uptime.loadbalancer.server.port=3001"
 EOFUPTIME
-    
-    # Add to volumes section
-    echo "  uptime_kuma_data:" >> docker-compose.yml
 fi
 
 if [[ "$INSTALL_PORTAINER" == "true" ]]; then
@@ -884,10 +856,50 @@ if [[ "$INSTALL_PORTAINER" == "true" ]]; then
       - "traefik.http.routers.portainer.tls.certresolver=letsencrypt"
       - "traefik.http.services.portainer.loadbalancer.server.port=9000"
 EOFPORTAINER
-    
-    # Add to volumes section
+fi
+
+# Now add volumes section
+cat >> docker-compose.yml << 'EOFVOLUMES'
+
+volumes:
+  traefik_data:
+  postgres_data:
+  redis_data:
+  n8n_data:
+  qdrant_data:
+  supabase_storage:
+  minio_data:
+EOFVOLUMES
+
+# Add optional service volumes
+if [[ "$INSTALL_OLLAMA" == "true" ]]; then
+    echo "  ollama_data:" >> docker-compose.yml
+fi
+
+if [[ "$INSTALL_OPENWEBUI" == "true" ]]; then
+    echo "  open_webui_data:" >> docker-compose.yml
+fi
+
+if [[ "$INSTALL_MONITORING" == "true" ]]; then
+    echo "  prometheus_data:" >> docker-compose.yml
+    echo "  grafana_data:" >> docker-compose.yml
+fi
+
+if [[ "$INSTALL_UPTIME" == "true" ]]; then
+    echo "  uptime_kuma_data:" >> docker-compose.yml
+fi
+
+if [[ "$INSTALL_PORTAINER" == "true" ]]; then
     echo "  portainer_data:" >> docker-compose.yml
 fi
+
+# Finally add networks section
+cat >> docker-compose.yml << 'EOFNETWORKS'
+
+networks:
+  automation-network:
+    driver: bridge
+EOFNETWORKS
 
 print_success "docker-compose.yml created"
 
