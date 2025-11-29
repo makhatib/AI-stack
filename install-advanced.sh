@@ -2,8 +2,11 @@
 
 ################################################################################
 # Advanced Automation Stack - Automated Installation Script
+https://www.youtube.com/@malkhatib
+
 # Core: n8n, PostgreSQL, Redis, Qdrant, Supabase, MinIO
 # Optional: Ollama, Grafana+Prometheus, Uptime Kuma, Portainer, Open WebUI
+
 ################################################################################
 
 set -e  # Exit on error
@@ -177,7 +180,7 @@ echo ""
 
 # Domain Name
 while true; do
-    read -p "$(echo -e ${CYAN}Enter your main domain (e.g., example.com): ${NC})" DOMAIN_NAME
+    read -p "$(echo -e "${CYAN}Enter your main domain (e.g., example.com): ${NC}")" DOMAIN_NAME
     if validate_domain "$DOMAIN_NAME"; then
         print_success "Valid domain: $DOMAIN_NAME"
         break
@@ -188,7 +191,7 @@ done
 
 # n8n Subdomain
 while true; do
-    read -p "$(echo -e ${CYAN}Enter n8n subdomain (default: n8n): ${NC})" N8N_SUBDOMAIN
+    read -p "$(echo -e "${CYAN}Enter n8n subdomain (default: n8n): ${NC}")" N8N_SUBDOMAIN
     N8N_SUBDOMAIN=${N8N_SUBDOMAIN:-n8n}
     if validate_domain "$N8N_SUBDOMAIN"; then
         print_success "n8n will be accessible at: https://$N8N_SUBDOMAIN.$DOMAIN_NAME"
@@ -200,7 +203,7 @@ done
 
 # SSL Email
 while true; do
-    read -p "$(echo -e ${CYAN}Enter email for SSL certificates (Let\'s Encrypt): ${NC})" SSL_EMAIL
+    read -p "$(echo -e "${CYAN}Enter email for SSL certificates (Let's Encrypt): ${NC}")" SSL_EMAIL
     if validate_email "$SSL_EMAIL"; then
         print_success "SSL email: $SSL_EMAIL"
         break
@@ -226,7 +229,7 @@ echo "11) Asia/Singapore"
 echo "12) Australia/Sydney"
 echo "13) Custom (enter manually)"
 
-read -p "$(echo -e ${CYAN}Choose timezone [1-13] (default: 8 - Asia/Riyadh): ${NC})" TZ_CHOICE
+read -p "$(echo -e "${CYAN}Choose timezone [1-13] (default: 8 - Asia/Riyadh): ${NC}")" TZ_CHOICE
 TZ_CHOICE=${TZ_CHOICE:-8}
 
 case $TZ_CHOICE in
@@ -243,7 +246,7 @@ case $TZ_CHOICE in
     11) GENERIC_TIMEZONE="Asia/Singapore" ;;
     12) GENERIC_TIMEZONE="Australia/Sydney" ;;
     13) 
-        read -p "$(echo -e ${CYAN}Enter timezone (e.g., Asia/Riyadh): ${NC})" GENERIC_TIMEZONE
+        read -p "$(echo -e "${CYAN}Enter timezone (e.g., Asia/Riyadh): ${NC}")" GENERIC_TIMEZONE
         ;;
     *) GENERIC_TIMEZONE="Asia/Riyadh" ;;
 esac
@@ -270,7 +273,7 @@ echo -e "${BOLD}${YELLOW}Would you like to install optional services?${NC}"
 echo ""
 
 # Ollama
-read -p "$(echo -e ${CYAN}Install Ollama (Local LLM for AI)? [Y/n]: ${NC})" INSTALL_OLLAMA
+read -p "$(echo -e "${CYAN}Install Ollama (Local LLM for AI)? [Y/n]: ${NC}")" INSTALL_OLLAMA
 if [[ ! "$INSTALL_OLLAMA" =~ ^[Nn]$ ]]; then
     INSTALL_OLLAMA="true"
     print_success "Ollama will be installed at: https://ollama.$DOMAIN_NAME"
@@ -281,7 +284,7 @@ fi
 
 # Open WebUI (only if Ollama is installed)
 if [[ "$INSTALL_OLLAMA" == "true" ]]; then
-    read -p "$(echo -e ${CYAN}Install Open WebUI (Chat interface for Ollama)? [Y/n]: ${NC})" INSTALL_OPENWEBUI
+    read -p "$(echo -e "${CYAN}Install Open WebUI (Chat interface for Ollama)? [Y/n]: ${NC}")" INSTALL_OPENWEBUI
     if [[ ! "$INSTALL_OPENWEBUI" =~ ^[Nn]$ ]]; then
         INSTALL_OPENWEBUI="true"
         print_success "Open WebUI will be installed at: https://ai.$DOMAIN_NAME"
@@ -294,7 +297,7 @@ else
 fi
 
 # Grafana + Prometheus
-read -p "$(echo -e ${CYAN}Install Grafana + Prometheus (Monitoring Stack)? [Y/n]: ${NC})" INSTALL_MONITORING
+read -p "$(echo -e "${CYAN}Install Grafana + Prometheus (Monitoring Stack)? [Y/n]: ${NC}")" INSTALL_MONITORING
 if [[ ! "$INSTALL_MONITORING" =~ ^[Nn]$ ]]; then
     INSTALL_MONITORING="true"
     print_success "Grafana will be installed at: https://grafana.$DOMAIN_NAME"
@@ -305,7 +308,7 @@ else
 fi
 
 # Uptime Kuma
-read -p "$(echo -e ${CYAN}Install Uptime Kuma (Service Monitoring)? [Y/n]: ${NC})" INSTALL_UPTIME
+read -p "$(echo -e "${CYAN}Install Uptime Kuma (Service Monitoring)? [Y/n]: ${NC}")" INSTALL_UPTIME
 if [[ ! "$INSTALL_UPTIME" =~ ^[Nn]$ ]]; then
     INSTALL_UPTIME="true"
     print_success "Uptime Kuma will be installed at: https://uptime.$DOMAIN_NAME"
@@ -315,7 +318,7 @@ else
 fi
 
 # Portainer
-read -p "$(echo -e ${CYAN}Install Portainer (Container Management)? [Y/n]: ${NC})" INSTALL_PORTAINER
+read -p "$(echo -e "${CYAN}Install Portainer (Container Management)? [Y/n]: ${NC}")" INSTALL_PORTAINER
 if [[ ! "$INSTALL_PORTAINER" =~ ^[Nn]$ ]]; then
     INSTALL_PORTAINER="true"
     print_success "Portainer will be installed at: https://portainer.$DOMAIN_NAME"
@@ -413,7 +416,7 @@ echo ""
 print_info "You can verify DNS with: nslookup $N8N_SUBDOMAIN.$DOMAIN_NAME"
 echo ""
 
-read -p "$(echo -e ${YELLOW}Have you configured the DNS records? [y/N]: ${NC})" DNS_CONFIRMED
+read -p "$(echo -e "${YELLOW}Have you configured the DNS records? [y/N]: ${NC}")" DNS_CONFIRMED
 if [[ ! "$DNS_CONFIRMED" =~ ^[Yy]$ ]]; then
     print_warning "Please configure DNS records first, then run this script again."
     exit 0
