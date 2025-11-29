@@ -37,22 +37,14 @@ This comprehensive installer deploys a complete **AI-powered automation infrastr
 - RAG (Retrieval Augmented Generation)
 - **URL:** `https://qdrant.yourdomain.com`
 
-#### 5. **Supabase** - Backend as a Service
-- PostgreSQL + REST API
-- Real-time subscriptions
-- Authentication
-- Storage
-- Edge functions
-- **URL:** `https://supabase.yourdomain.com`
-
-#### 6. **MinIO** - Object Storage
+#### 5. **MinIO** - Object Storage
 - S3-compatible API
 - File uploads & storage
 - Bucket management
 - **API:** `https://s3.yourdomain.com`
 - **Console:** `https://minio.yourdomain.com`
 
-#### 7. **Traefik** - Reverse Proxy
+#### 6. **Traefik** - Reverse Proxy
 - Automatic SSL certificates
 - HTTP to HTTPS redirect
 - Load balancing
@@ -213,8 +205,6 @@ Every installation generates **unique, cryptographically secure** passwords:
 - **PostgreSQL Password:** 64 characters (128-bit entropy)
 - **Redis Password:** 64 characters
 - **Qdrant API Key:** 64 characters
-- **Supabase JWT Secret:** 64 characters
-- **Supabase Keys:** 64 characters each
 - **MinIO Credentials:** 32 characters
 - **Grafana Password:** 32 characters (if installed)
 
@@ -742,7 +732,6 @@ docker compose up -d ollama
 
 - **n8n:** https://docs.n8n.io
 - **Qdrant:** https://qdrant.tech/documentation/
-- **Supabase:** https://supabase.com/docs
 - **MinIO:** https://min.io/docs/
 - **Ollama:** https://ollama.ai/
 - **Grafana:** https://grafana.com/docs/
@@ -750,9 +739,13 @@ docker compose up -d ollama
 
 ### Community
 
-- **n8n Community:** https://community.n8n.io
-- **Supabase Discord:** https://discord.supabase.com
-- **Ollama Discord:** https://discord.gg/ollama
+
+👉 موقعي الالكتروني: https://malkhatib.com/
+👉 لينكدإن:   / malkhatib1  
+👉 الديسكورد:   / discord  
+👉 تليجرام: https://t.me/+YAHmKBLoLWoxNWQ0
+👉 تويتر:   / malkhateeb  
+
 
 ---
 
