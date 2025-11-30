@@ -16,7 +16,6 @@
 ### Core Services
 - **n8n:** https://_________________.___________________
 - **Qdrant:** https://qdrant.___________________
-- **Supabase:** https://supabase.___________________
 - **MinIO Console:** https://minio.___________________
 - **MinIO API (S3):** https://s3.___________________
 - **Traefik Dashboard:** http://___________________ :8080
@@ -51,16 +50,6 @@ Password: ___________________________________________
 ```
 URL:      https://qdrant.yourdomain.com
 API Key:  ___________________________________________
-```
-
-### Supabase
-```
-Dashboard URL:  https://supabase.yourdomain.com
-Dashboard Pass: ___________________________________________
-
-JWT Secret:     ___________________________________________
-Anon Key:       ___________________________________________
-Service Key:    ___________________________________________
 ```
 
 ### MinIO Object Storage
