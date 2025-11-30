@@ -141,18 +141,12 @@ uptime.yourdomain.com     A    YOUR_SERVER_IP
 portainer.yourdomain.com  A    YOUR_SERVER_IP
 ```
 
-**Wait 5-30 minutes for DNS propagation!**
-
-Verify with:
-```bash
-nslookup n8n.yourdomain.com
-```
 
 ### Step 2: Download & Run Installer
 
 ```bash
 # Download the installer
-git clone https://raw.githubusercontent.com/YOUR_REPO/install-advanced.sh](https://github.com/makhatib/AI-stack.git
+git clone https://github.com/makhatib/AI-stack.git
 
 # Enter folder 
 cd AI-stack
@@ -240,194 +234,6 @@ Shared Infrastructure:
    • PostgreSQL (shared DB)
    • Redis (shared cache)
 ```
-
-### Network Architecture
-
-All services communicate on the **`automation-network`** bridge network:
-- Internal DNS resolution
-- Service isolation
-- Secure inter-service communication
-
----
-
-## 💡 Use Cases & Integration Examples
-
-### 1. AI-Powered Document Processing
-
-```
-Upload PDF → MinIO
-           → n8n workflow triggers
-           → Ollama extracts text
-           → Ollama generates embeddings
-           → Store in Qdrant
-           → Save metadata in Supabase
-```
-
-**n8n Workflow:**
-```javascript
-// 1. Trigger: MinIO file upload webhook
-// 2. Get file from MinIO
-// 3. Send to Ollama for text extraction
-// 4. Generate embeddings with Ollama
-// 5. Store embeddings in Qdrant
-// 6. Save metadata to Supabase REST API
-```
-
-### 2. Semantic Search System
-
-```
-User query → n8n workflow
-           → Generate query embedding (Ollama)
-           → Search Qdrant for similar vectors
-           → Retrieve top matches
-           → Send to Ollama for answer generation
-           → Return formatted response
-```
-
-### 3. Data Pipeline with Monitoring
-
-```
-Schedule (n8n) → Extract data from API
-               → Transform data
-               → Load to PostgreSQL
-               → Grafana auto-updates dashboard
-               → Uptime Kuma monitors job
-```
-
-### 4. AI Chat with Knowledge Base (RAG)
-
-```
-User message → Open WebUI
-            → Generate embedding (Ollama)
-            → Search knowledge base (Qdrant)
-            → Combine context + query
-            → Generate answer (Ollama)
-            → Stream response to user
-```
-
-### 5. File Processing Automation
-
-```
-File upload → MinIO
-           → Webhook to n8n
-           → Process file
-           → Store results in Supabase
-           → Send notification
-```
-
----
-
-## 🛠️ Post-Installation Setup
-
-### Configure n8n
-
-1. Visit `https://n8n.yourdomain.com`
-2. Create owner account
-3. Explore workflow templates
-4. Connect integrations
-
-**Useful n8n Nodes:**
-- **Qdrant:** Vector search operations
-- **S3/MinIO:** File storage operations
-- **HTTP Request:** Call Ollama API
-- **PostgreSQL:** Direct database queries
-
-### Configure MinIO
-
-1. Visit `https://minio.yourdomain.com`
-2. Login with credentials (from `.env`)
-3. Create first bucket
-4. Set bucket policy
-5. Get access keys
-
-**MinIO with n8n:**
-```javascript
-// n8n S3 node configuration
-{
-  "endpoint": "https://s3.yourdomain.com",
-  "accessKeyId": "YOUR_MINIO_USER",
-  "secretAccessKey": "YOUR_MINIO_PASSWORD",
-  "bucket": "your-bucket"
-}
-```
-
-### Setup Ollama (if installed)
-
-1. Pull AI model:
-```bash
-docker compose exec ollama ollama pull llama2
-# or
-docker compose exec ollama ollama pull mistral
-```
-
-2. Test Ollama:
-```bash
-curl https://ollama.yourdomain.com/api/tags
-```
-
-3. Generate text:
-```bash
-curl https://ollama.yourdomain.com/api/generate -d '{
-  "model": "llama2",
-  "prompt": "Why is the sky blue?"
-}'
-```
-
-4. Use in n8n:
-```javascript
-// HTTP Request node to Ollama
-POST https://ollama.yourdomain.com/api/generate
-{
-  "model": "llama2",
-  "prompt": "{{$json.userQuery}}",
-  "stream": false
-}
-```
-
-### Configure Qdrant
-
-1. Access API: `https://qdrant.yourdomain.com`
-2. Use API key from `.env`
-3. Create collection
-4. Insert vectors
-
-**Example with Python:**
-```python
-from qdrant_client import QdrantClient
-
-client = QdrantClient(
-    url="https://qdrant.yourdomain.com",
-    api_key="YOUR_QDRANT_API_KEY"
-)
-
-# Create collection
-client.create_collection(
-    collection_name="documents",
-    vectors_config={"size": 384, "distance": "Cosine"}
-)
-
-# Insert vector
-client.upsert(
-    collection_name="documents",
-    points=[{
-        "id": 1,
-        "vector": [0.1, 0.2, ...],  # 384 dimensions
-        "payload": {"text": "Document content"}
-    }]
-)
-```
-
-### Setup Grafana (if installed)
-
-1. Visit `https://grafana.yourdomain.com`
-2. Login (admin / password from `.env`)
-3. Add data source:
-   - Type: Prometheus
-   - URL: `http://prometheus:9090`
-4. Import dashboards
-5. Create custom dashboards
-
----
 
 ## 📝 Useful Commands
 
@@ -567,22 +373,6 @@ docker compose restart ollama
 docker compose exec ollama ollama list
 ```
 
-### Supabase Issues
-
-```bash
-# Check all Supabase services
-docker compose ps | grep supabase
-
-# Check auth service
-docker compose logs supabase-auth
-
-# Check database connection
-docker compose exec postgres psql -U postgres -d supabase -c "SELECT 1;"
-
-# Restart Supabase stack
-docker compose restart supabase-studio supabase-auth supabase-rest
-```
-
 ### Out of Memory
 
 ```bash
@@ -716,11 +506,11 @@ docker compose up -d ollama
 ### Community
 
 
-👉 موقعي الالكتروني: https://malkhatib.com/
-👉 لينكدإن:   / malkhatib1  
-👉 الديسكورد:   / discord  
-👉 تليجرام: https://t.me/+YAHmKBLoLWoxNWQ0
-👉 تويتر:   / malkhateeb  
+👉 website:     https://malkhatib.com/
+👉 linkedin:    malkhatib1  
+👉 discord:     https://discord.com/invite/KTdDJrVDgV
+👉 telegram:    https://t.me/+YAHmKBLoLWoxNWQ0
+👉 x:           @malkhateeb  
 
 ---
 
