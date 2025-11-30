@@ -933,19 +933,17 @@ sleep 2
 
 print_header "🎉 Deployment Complete!"
 
-cat << EOF
-
-${GREEN}${BOLD}Installation Summary${NC}
-${GREEN}═══════════════════════════════════════════${NC}
-
-${CYAN}${BOLD}Core Services URLs:${NC}
-  • n8n (Workflow): ${GREEN}https://$N8N_SUBDOMAIN.$DOMAIN_NAME${NC}
-  • Qdrant (Vector DB): ${GREEN}https://qdrant.$DOMAIN_NAME${NC}
-  • MinIO Console (UI): ${GREEN}https://minio.$DOMAIN_NAME${NC}
-  • MinIO API (S3): ${GREEN}https://s3.$DOMAIN_NAME${NC}
-  • Traefik Dashboard: ${GREEN}http://$SERVER_IP:8080${NC}
-
-EOF
+echo ""
+echo -e "${GREEN}${BOLD}Installation Summary${NC}"
+echo -e "${GREEN}═══════════════════════════════════════════${NC}"
+echo ""
+echo -e "${CYAN}${BOLD}Core Services URLs:${NC}"
+echo -e "  • n8n (Workflow): ${GREEN}https://$N8N_SUBDOMAIN.$DOMAIN_NAME${NC}"
+echo -e "  • Qdrant (Vector DB): ${GREEN}https://qdrant.$DOMAIN_NAME${NC}"
+echo -e "  • MinIO Console (UI): ${GREEN}https://minio.$DOMAIN_NAME${NC}"
+echo -e "  • MinIO API (S3): ${GREEN}https://s3.$DOMAIN_NAME${NC}"
+echo -e "  • Traefik Dashboard: ${GREEN}http://$SERVER_IP:8080${NC}"
+echo ""
 
 if [[ "$INSTALL_OLLAMA" == "true" ]]; then
     echo -e "${CYAN}${BOLD}AI Services URLs:${NC}"
@@ -973,99 +971,85 @@ if [[ "$INSTALL_PORTAINER" == "true" ]]; then
     echo -e "  • Portainer: ${GREEN}https://portainer.$DOMAIN_NAME${NC}"
 fi
 
-cat << EOF
-
-${CYAN}${BOLD}Credentials (Saved in .env):${NC}
-
-  ${BOLD}PostgreSQL:${NC}
-    User:     postgres
-    Password: $POSTGRES_PASSWORD
-    
-  ${BOLD}Redis:${NC}
-    Password: $REDIS_PASSWORD
-    
-  ${BOLD}Qdrant:${NC}
-    API Key:  $QDRANT_API_KEY
-    
-  ${BOLD}MinIO:${NC}
-    User:     $MINIO_ROOT_USER
-    Password: $MINIO_ROOT_PASSWORD
-
-EOF
+echo ""
+echo -e "${CYAN}${BOLD}Credentials (Saved in .env):${NC}"
+echo ""
+echo -e "  ${BOLD}PostgreSQL:${NC}"
+echo "    User:     postgres"
+echo "    Password: $POSTGRES_PASSWORD"
+echo ""
+echo -e "  ${BOLD}Redis:${NC}"
+echo "    Password: $REDIS_PASSWORD"
+echo ""
+echo -e "  ${BOLD}Qdrant:${NC}"
+echo "    API Key:  $QDRANT_API_KEY"
+echo ""
+echo -e "  ${BOLD}MinIO:${NC}"
+echo "    User:     $MINIO_ROOT_USER"
+echo "    Password: $MINIO_ROOT_PASSWORD"
+echo ""
 
 if [[ "$INSTALL_MONITORING" == "true" ]]; then
-    cat << EOFGRAF
-  ${BOLD}Grafana:${NC}
-    User:     admin
-    Password: $GRAFANA_PASSWORD
-
-EOFGRAF
+    echo -e "  ${BOLD}Grafana:${NC}"
+    echo "    User:     admin"
+    echo "    Password: $GRAFANA_PASSWORD"
+    echo ""
 fi
 
-cat << EOF
-
-${GREEN}═══════════════════════════════════════════${NC}
-${GREEN}${BOLD}Thank you for using my script!${NC}
-${GREEN}Subscribe for more AI Guides:${NC}
-${CYAN}YouTube: https://youtube.com/@malkhatib${NC}
-${GREEN}═══════════════════════════════════════════${NC}
-
-${CYAN}${BOLD}Installation Location:${NC}
-  • Directory: ${GREEN}$(pwd)${NC}
-
-${CYAN}${BOLD}Next Steps:${NC}
-
-  ${BOLD}1. Access n8n:${NC}
-     Visit: https://$N8N_SUBDOMAIN.$DOMAIN_NAME
-     Create your owner account on first visit
-
-  ${BOLD}2. Configure MinIO:${NC}
-     Visit: https://minio.$DOMAIN_NAME
-     Login with the credentials above and create your first bucket
-
-EOF
+echo ""
+echo -e "${GREEN}═══════════════════════════════════════════${NC}"
+echo -e "${GREEN}${BOLD}Thank you for using my script!${NC}"
+echo -e "${GREEN}Subscribe for more AI Guides:${NC}"
+echo -e "${CYAN}YouTube: https://youtube.com/@malkhatib${NC}"
+echo -e "${GREEN}═══════════════════════════════════════════${NC}"
+echo ""
+echo -e "${CYAN}${BOLD}Installation Location:${NC}"
+echo -e "  • Directory: ${GREEN}$(pwd)${NC}"
+echo ""
+echo -e "${CYAN}${BOLD}Next Steps:${NC}"
+echo ""
+echo -e "  ${BOLD}1. Access n8n:${NC}"
+echo "     Visit: https://$N8N_SUBDOMAIN.$DOMAIN_NAME"
+echo "     Create your owner account on first visit"
+echo ""
+echo -e "  ${BOLD}2. Configure MinIO:${NC}"
+echo "     Visit: https://minio.$DOMAIN_NAME"
+echo "     Login with the credentials above and create your first bucket"
+echo ""
 
 if [[ "$INSTALL_OLLAMA" == "true" ]]; then
-    # FIXED: The delimiter is flush left, ensuring no syntax error.
-    cat << EOFOLLAMA2
-  ${BOLD}3. Setup Ollama:${NC}
-     Pull a model: docker compose exec ollama ollama pull llama2
-     Test: curl https://ollama.$DOMAIN_NAME/api/tags
-
-EOFOLLAMA2
+    echo -e "  ${BOLD}3. Setup Ollama:${NC}"
+    echo "     Pull a model: docker compose exec ollama ollama pull llama2"
+    echo "     Test: curl https://ollama.$DOMAIN_NAME/api/tags"
+    echo ""
 fi
 
 if [[ "$INSTALL_MONITORING" == "true" ]]; then
-    # FIXED: The delimiter is flush left, ensuring no syntax error.
-    cat << EOFGRAF2
-  ${BOLD}4. Configure Grafana:${NC}
-     Visit: https://grafana.$DOMAIN_NAME
-     Add Prometheus data source: http://prometheus:9090
-
-EOFGRAF2
+    echo -e "  ${BOLD}4. Configure Grafana:${NC}"
+    echo "     Visit: https://grafana.$DOMAIN_NAME"
+    echo "     Add Prometheus data source: http://prometheus:9090"
+    echo ""
 fi
 
-cat << EOF
-${CYAN}${BOLD}Useful Commands:${NC}
-
-  ${BOLD}View logs:${NC}
-    docker compose logs -f
-
-  ${BOLD}Check status:${NC}
-    docker compose ps
-
-${YELLOW}${BOLD}⚠️  IMPORTANT:${NC}
-  • SSL certificates may take 2-5 minutes to generate
-  • Keep your .env file secure - it contains all passwords!
-  • All credentials are saved in: ${YELLOW}.env${NC}
-
-${GREEN}═══════════════════════════════════════════${NC}
-${GREEN}${BOLD}🚀 Installation Complete!${NC}
-${GREEN}طريقك للذكاء الاصطناعي المحلي${NC}
-${GREEN}Your Path to Self-Hosted AI Infrastructure${NC}
-${GREEN}═══════════════════════════════════════════${NC}
-
-EOF
+echo -e "${CYAN}${BOLD}Useful Commands:${NC}"
+echo ""
+echo -e "  ${BOLD}View logs:${NC}"
+echo "    docker compose logs -f"
+echo ""
+echo -e "  ${BOLD}Check status:${NC}"
+echo "    docker compose ps"
+echo ""
+echo -e "${YELLOW}${BOLD}⚠️  IMPORTANT:${NC}"
+echo "  • SSL certificates may take 2-5 minutes to generate"
+echo "  • Keep your .env file secure - it contains all passwords!"
+echo -e "  • All credentials are saved in: ${YELLOW}.env${NC}"
+echo ""
+echo -e "${GREEN}═══════════════════════════════════════════${NC}"
+echo -e "${GREEN}${BOLD}🚀 Installation Complete!${NC}"
+echo -e "${GREEN}طريقك للذكاء الاصطناعي المحلي${NC}"
+echo -e "${GREEN}Your Path to Self-Hosted AI Infrastructure${NC}"
+echo -e "${GREEN}═══════════════════════════════════════════${NC}"
+echo ""
 
 # Save installation info
 cat > INSTALLATION_INFO.txt << EOFINST
