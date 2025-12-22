@@ -507,9 +507,13 @@ docker compose up -d ollama
 
 
 👉 website:     https://malkhatib.com/
+
 👉 linkedin:    malkhatib1  
+
 👉 discord:     https://discord.com/invite/KTdDJrVDgV
+
 👉 telegram:    https://t.me/+YAHmKBLoLWoxNWQ0
+
 👉 x:           @malkhateeb  
 
 ---
